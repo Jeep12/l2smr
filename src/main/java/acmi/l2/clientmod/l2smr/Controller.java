@@ -56,6 +56,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import acmi.l2.clientmod.l2smr.smview.SMView;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -171,6 +172,10 @@ public class Controller extends ControllerBase implements Initializable {
 
     private final ListProperty<Actor> actors = new SimpleListProperty<>();
     private final ObjectProperty<File> usx = new SimpleObjectProperty<>();
+    
+    // Singleton para la ventana del visor de StaticMesh
+    private static Stage smStage = null;
+    private static SMView smController = null;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "L2smr Executor") {{
         setDaemon(true);
@@ -645,33 +650,49 @@ public class Controller extends ControllerBase implements Initializable {
     private void showUmodel(final String obj, final String file) {
         Platform.runLater(() -> {
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("smview/smview.fxml"));
-                loader.load();
-                SMView controller = loader.getController();
-                controller.setStaticmesh(getStaticMeshDir(), file, obj);
-                Scene scene = new Scene(loader.getRoot());
-                scene.setOnKeyReleased(controller::onKeyReleased);
+                // Si la ventana no existe, crear la ventana única por primera vez
+                if (smStage == null) {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("smview/smview.fxml"));
+                    loader.load();
+                    smController = loader.getController();
+                    Scene scene = new Scene(loader.getRoot());
+                    scene.setOnKeyReleased(smController::onKeyReleased);
 
-                Stage smStage = new Stage();
-                smStage.setScene(scene);
+                    smStage = new Stage();
+                    smStage.setScene(scene);
+                    
+                    // Configurar posición y tamaño inicial desde preferencias
+                    smStage.setX(Double.parseDouble(L2smr.getPrefs().get("smview.x", "100")));
+                    smStage.setY(Double.parseDouble(L2smr.getPrefs().get("smview.y", "100")));
+                    smStage.setWidth(Double.parseDouble(L2smr.getPrefs().get("smview.width", "600")));
+                    smStage.setHeight(Double.parseDouble(L2smr.getPrefs().get("smview.height", "400")));
+
+                    // Listener para guardar posición y tamaño
+                    InvalidationListener listener = observable -> {
+                        L2smr.getPrefs().put("smview.x", String.valueOf(Math.round(smStage.getX())));
+                        L2smr.getPrefs().put("smview.y", String.valueOf(Math.round(smStage.getY())));
+                        L2smr.getPrefs().put("smview.width", String.valueOf(Math.round(smStage.getWidth())));
+                        L2smr.getPrefs().put("smview.height", String.valueOf(Math.round(smStage.getHeight())));
+                    };
+                    smStage.xProperty().addListener(listener);
+                    smStage.yProperty().addListener(listener);
+                    smStage.widthProperty().addListener(listener);
+                    smStage.heightProperty().addListener(listener);
+                }
+
+                // Actualizar la ventana con el nuevo StaticMesh
+                smController.setStaticmesh(getStaticMeshDir(), file, obj);
                 smStage.setTitle(obj);
-                smStage.show();
-
-                smStage.setX(Double.parseDouble(L2smr.getPrefs().get("smview.x", String.valueOf(smStage.getX()))));
-                smStage.setY(Double.parseDouble(L2smr.getPrefs().get("smview.y", String.valueOf(smStage.getY()))));
-                smStage.setWidth(Double.parseDouble(L2smr.getPrefs().get("smview.width", String.valueOf(smStage.getWidth()))));
-                smStage.setHeight(Double.parseDouble(L2smr.getPrefs().get("smview.height", String.valueOf(smStage.getHeight()))));
-
-                InvalidationListener listener = observable -> {
-                    L2smr.getPrefs().put("smview.x", String.valueOf(Math.round(smStage.getX())));
-                    L2smr.getPrefs().put("smview.y", String.valueOf(Math.round(smStage.getY())));
-                    L2smr.getPrefs().put("smview.width", String.valueOf(Math.round(smStage.getWidth())));
-                    L2smr.getPrefs().put("smview.height", String.valueOf(Math.round(smStage.getHeight())));
-                };
-                smStage.xProperty().addListener(listener);
-                smStage.yProperty().addListener(listener);
-                smStage.widthProperty().addListener(listener);
-                smStage.heightProperty().addListener(listener);
+                
+                // Mostrar la ventana si está oculta
+                if (!smStage.isShowing()) {
+                    smStage.show();
+                } else {
+                    // Si ya está visible, traerla al frente
+                    smStage.toFront();
+                    smStage.requestFocus();
+                }
+                
             } catch (IOException e) {
                 onException("Couldn't show staticmesh", e);
             }
