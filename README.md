@@ -24,7 +24,7 @@ This project has been updated to work with **Java 17** and **Gradle 8.10**.
 .\run.bat
 ```
 
-**Note:** The `run.bat` script automatically downloads JavaFX and runs the application.
+**Note:** The `run.bat` script automatically extracts JavaFX from the `javafx` folder and runs the application.
 
 ### Manual execution:
 ```bash
