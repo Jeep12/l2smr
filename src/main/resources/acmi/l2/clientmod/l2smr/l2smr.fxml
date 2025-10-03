@@ -64,10 +64,10 @@
                             <children>
                                 <ComboBox fx:id="unrChooser" prefWidth="150.0"/>
                                 <CheckBox fx:id="oldFormat" mnemonicParsing="false" text="old format"/>
-                                <VBox spacing="2.0">
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <RadioButton fx:id="singleViewWindow" mnemonicParsing="false" text="Single view window" selected="true"/>
                                     <RadioButton fx:id="multipleWindows" mnemonicParsing="false" text="Multiple windows"/>
-                                </VBox>
+                                </HBox>
                             </children>
                         </HBox>
                     </children>
