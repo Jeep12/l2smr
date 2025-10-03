@@ -6,3 +6,6 @@ out/
 # Gradle
 .gradle/
 build/
+
+# JavaFX extraído (se mantiene solo el zip)
+javafx/javafx-sdk-17.0.2/
