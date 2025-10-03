@@ -1,16 +1,11 @@
 @echo off
-echo Descargando JavaFX...
+echo Configurando JavaFX...
 if not exist "javafx" mkdir javafx
 cd javafx
 
-if not exist "javafx-17.0.2.zip" (
-    echo Descargando JavaFX 17.0.2...
-    powershell -Command "Invoke-WebRequest -Uri 'https://download2.gluonhq.com/openjfx/17.0.2/openjfx-17.0.2_windows-x64_bin-sdk.zip' -OutFile 'javafx-17.0.2.zip'"
-)
-
 if not exist "javafx-sdk-17.0.2" (
-    echo Extrayendo JavaFX...
-    powershell -Command "Expand-Archive -Path 'javafx-17.0.2.zip' -DestinationPath '.'"
+    echo Extrayendo JavaFX desde archivo local...
+    powershell -Command "Expand-Archive -Path 'javafx-17.0.2.zip' -DestinationPath '.' -Force"
 )
 
 cd ..
