@@ -182,6 +182,7 @@ public class View3D implements Initializable {
                                         sections.add(meshView);
                                     }
 
+                                    staticmeshGroup.getChildren().clear(); // Limpiar StaticMeshActors anteriores
                                     staticmeshGroup.getChildren().addAll(sections);
                                 });
                     }

@@ -92,6 +92,10 @@ public class Controller extends ControllerBase implements Initializable {
     @FXML
     private RadioButton multipleWindows;
     @FXML
+    private TextField staticMeshSearchField;
+    @FXML
+    private Button resetSearchButton;
+    @FXML
     private TableView<Actor> table;
     @FXML
     private TableColumn<Actor, String> actorColumn;
@@ -249,9 +253,18 @@ public class Controller extends ControllerBase implements Initializable {
                             .filter(actor -> !rotatable.isSelected() || actor.getRotation() != null)
                             .filter(actor -> !scalable.isSelected() || actor.getScale() != null || actor.getScale3D() != null)
                             .filter(actor -> !rotating.isSelected() || actor.getRotationRate() != null)
-                            .filter(actor -> filterStaticMesh.getText() == null ||
-                                    filterStaticMesh.getText().isEmpty() ||
-                                    actor.getStaticMesh().toLowerCase().contains(filterStaticMesh.getText().toLowerCase()))
+                            .filter(actor -> {
+                                // Nuevo filtro de búsqueda rápida
+                                String searchText = staticMeshSearchField.getText();
+                                String filterText = filterStaticMesh.getText();
+                                
+                                boolean matchesSearch = searchText == null || searchText.isEmpty() || 
+                                        actor.getStaticMesh().toLowerCase().contains(searchText.toLowerCase());
+                                boolean matchesFilter = filterText == null || filterText.isEmpty() || 
+                                        actor.getStaticMesh().toLowerCase().contains(filterText.toLowerCase());
+                                
+                                return matchesSearch && matchesFilter;
+                            })
                             .filter(actor -> {
                                 Double x = getDoubleOrClearTextField(filterX);
                                 Double y = getDoubleOrClearTextField(filterY);
@@ -262,7 +275,7 @@ public class Controller extends ControllerBase implements Initializable {
                             })
                             .collect(Collectors.toList()));
                 },
-                actors, filterStaticMesh.textProperty(),
+                actors, staticMeshSearchField.textProperty(), filterStaticMesh.textProperty(),
                 filterX.textProperty(), filterY.textProperty(), filterZ.textProperty(), filterRange.textProperty(),
                 rotatable.selectedProperty(), scalable.selectedProperty(), rotating.selectedProperty()));
     }
@@ -1083,5 +1096,10 @@ public class Controller extends ControllerBase implements Initializable {
                 alert.showAndWait();
             }
         });
+    }
+
+    @FXML
+    private void resetSearch() {
+        staticMeshSearchField.clear();
     }
 }

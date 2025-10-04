@@ -66,7 +66,10 @@
                                 <CheckBox fx:id="oldFormat" mnemonicParsing="false" text="old format"/>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <RadioButton fx:id="singleViewWindow" mnemonicParsing="false" text="Single view window" selected="true"/>
-                                    <RadioButton fx:id="multipleWindows" mnemonicParsing="false" text="Multiple windows"/>
+                                    <RadioButton fx:id="multipleWindows" mnemonicParsing="false" text="Multiple view windows"/>
+                                    <Label text="Search:"/>
+                                    <TextField fx:id="staticMeshSearchField" prefWidth="200.0" promptText="Search StaticMesh..."/>
+                                    <Button fx:id="resetSearchButton" mnemonicParsing="false" text="Reset" onAction="#resetSearch"/>
                                 </HBox>
                             </children>
                         </HBox>
