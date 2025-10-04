@@ -254,13 +254,15 @@ public class Controller extends ControllerBase implements Initializable {
                             .filter(actor -> !scalable.isSelected() || actor.getScale() != null || actor.getScale3D() != null)
                             .filter(actor -> !rotating.isSelected() || actor.getRotationRate() != null)
                             .filter(actor -> {
-                                // Nuevo filtro de búsqueda rápida
+                                // Nuevo filtro de búsqueda rápida - busca en Actor y StaticMesh
                                 String searchText = staticMeshSearchField.getText();
                                 String filterText = filterStaticMesh.getText();
                                 
                                 boolean matchesSearch = searchText == null || searchText.isEmpty() || 
+                                        actor.getActorName().toLowerCase().contains(searchText.toLowerCase()) ||
                                         actor.getStaticMesh().toLowerCase().contains(searchText.toLowerCase());
                                 boolean matchesFilter = filterText == null || filterText.isEmpty() || 
+                                        actor.getActorName().toLowerCase().contains(filterText.toLowerCase()) ||
                                         actor.getStaticMesh().toLowerCase().contains(filterText.toLowerCase());
                                 
                                 return matchesSearch && matchesFilter;
