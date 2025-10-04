@@ -2,7 +2,8 @@ L2smr
 =====
 Tool for adding/editing StaticMesh actors.
 
-![L2smr Screenshot](images/screenshot.png)
+<img width="1917" height="1026" alt="image" src="https://github.com/user-attachments/assets/318e3d4a-f205-4d73-b9c6-69c6672723ce" />
+
 
 ## Build & Run
 
@@ -41,7 +42,7 @@ This is a fork updated to work with Java 17 and modern Gradle. All original func
 ---
 
 ## Original Information
-
+![L2smr Screenshot](images/screenshot.png)
 Build & Run (original method)
 -----------
 ```
