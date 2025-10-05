@@ -182,12 +182,42 @@ public class Controller extends ControllerBase implements Initializable {
     private final ObjectProperty<File> usx = new SimpleObjectProperty<>();
     
     // Singleton para la ventana del visor de StaticMesh
-    private static Stage smStage = null;
-    private static SMView smController = null;
+    private Stage smStage = null;
+    private SMView smController = null;
+    private Process smProcess = null; // Proceso de la ventana para poder forzar su cierre
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "L2smr Executor") {{
         setDaemon(true);
     }});
+
+    /**
+     * Fuerza el cierre completo de la ventana del static mesh y limpia recursos
+     */
+    private void forceCloseSMWindow() {
+        try {
+            // Cerrar la ventana si está abierta
+            if (smStage != null && smStage.isShowing()) {
+                smStage.close();
+                System.out.println("Ventana del StaticMesh cerrada forzadamente");
+            }
+            
+            // Limpiar referencias
+            smStage = null;
+            smController = null;
+            smProcess = null;
+            
+            // Forzar garbage collection para liberar memoria
+            System.gc();
+            
+            // Pequeña pausa para asegurar que se liberen los recursos
+            Thread.sleep(100);
+            
+            System.out.println("Recursos del StaticMesh limpiados completamente");
+            
+        } catch (Exception e) {
+            System.err.println("Error al forzar cierre de la ventana: " + e.getMessage());
+        }
+    }
 
     public Stage getStage() {
         return stage.get();
@@ -677,50 +707,53 @@ public class Controller extends ControllerBase implements Initializable {
             try {
                 // Verificar el estado de la casilla "Single View Window"
                 if (singleViewWindow.isSelected()) {
-                    // COMPORTAMIENTO NUEVO: Una sola ventana (Singleton)
+                    // COMPORTAMIENTO NUEVO: Una sola ventana (pero siempre nueva para asegurar carga correcta)
                     
-                    // Si la ventana no existe, crear la ventana única por primera vez
-                    if (smStage == null) {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("smview/smview.fxml"));
-                        loader.load();
-                        smController = loader.getController();
-                        Scene scene = new Scene(loader.getRoot());
-                        scene.setOnKeyReleased(smController::onKeyReleased);
-
-                        smStage = new Stage();
-                        smStage.setScene(scene);
-                        
-                        // Configurar posición y tamaño inicial desde preferencias
-                        smStage.setX(Double.parseDouble(L2smr.getPrefs().get("smview.x", "100")));
-                        smStage.setY(Double.parseDouble(L2smr.getPrefs().get("smview.y", "100")));
-                        smStage.setWidth(Double.parseDouble(L2smr.getPrefs().get("smview.width", "600")));
-                        smStage.setHeight(Double.parseDouble(L2smr.getPrefs().get("smview.height", "400")));
-
-                        // Listener para guardar posición y tamaño
-                        InvalidationListener listener = observable -> {
-                            L2smr.getPrefs().put("smview.x", String.valueOf(Math.round(smStage.getX())));
-                            L2smr.getPrefs().put("smview.y", String.valueOf(Math.round(smStage.getY())));
-                            L2smr.getPrefs().put("smview.width", String.valueOf(Math.round(smStage.getWidth())));
-                            L2smr.getPrefs().put("smview.height", String.valueOf(Math.round(smStage.getHeight())));
-                        };
-                        smStage.xProperty().addListener(listener);
-                        smStage.yProperty().addListener(listener);
-                        smStage.widthProperty().addListener(listener);
-                        smStage.heightProperty().addListener(listener);
+                    // Forzar cierre completo de la ventana existente si está abierta
+                    if (smStage != null && smStage.isShowing()) {
+                        forceCloseSMWindow();
                     }
+                    
+                    // Crear una nueva ventana cada vez para asegurar que se carga el static mesh correcto
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("smview/smview.fxml"));
+                    loader.load();
+                    smController = loader.getController();
+                    Scene scene = new Scene(loader.getRoot());
+                    scene.setOnKeyReleased(smController::onKeyReleased);
 
-                    // Actualizar la ventana con el nuevo StaticMesh
-                    smController.setStaticmesh(getStaticMeshDir(), file, obj);
+                    smStage = new Stage();
+                    smStage.setScene(scene);
                     smStage.setTitle(obj);
                     
-                    // Mostrar la ventana si está oculta
-                    if (!smStage.isShowing()) {
-                        smStage.show();
-                    } else {
-                        // Si ya está visible, traerla al frente
-                        smStage.toFront();
-                        smStage.requestFocus();
-                    }
+                    // Configurar posición y tamaño inicial desde preferencias
+                    smStage.setX(Double.parseDouble(L2smr.getPrefs().get("smview.x", "100")));
+                    smStage.setY(Double.parseDouble(L2smr.getPrefs().get("smview.y", "100")));
+                    smStage.setWidth(Double.parseDouble(L2smr.getPrefs().get("smview.width", "600")));
+                    smStage.setHeight(Double.parseDouble(L2smr.getPrefs().get("smview.height", "400")));
+
+                    // Listener para guardar posición y tamaño
+                    InvalidationListener listener = observable -> {
+                        L2smr.getPrefs().put("smview.x", String.valueOf(Math.round(smStage.getX())));
+                        L2smr.getPrefs().put("smview.y", String.valueOf(Math.round(smStage.getY())));
+                        L2smr.getPrefs().put("smview.width", String.valueOf(Math.round(smStage.getWidth())));
+                        L2smr.getPrefs().put("smview.height", String.valueOf(Math.round(smStage.getHeight())));
+                    };
+                    smStage.xProperty().addListener(listener);
+                    smStage.yProperty().addListener(listener);
+                    smStage.widthProperty().addListener(listener);
+                    smStage.heightProperty().addListener(listener);
+
+                    // Listener para forzar limpieza cuando se cierra la ventana
+                    smStage.setOnCloseRequest(event -> {
+                        System.out.println("Ventana del StaticMesh cerrada por el usuario");
+                        forceCloseSMWindow();
+                    });
+
+                    // Cargar el nuevo StaticMesh en la ventana fresca
+                    smController.setStaticmesh(getStaticMeshDir(), file, obj);
+                    
+                    // Mostrar la nueva ventana
+                    smStage.show();
                     
                 } else {
                     // COMPORTAMIENTO ORIGINAL: Múltiples ventanas (una nueva cada vez)
